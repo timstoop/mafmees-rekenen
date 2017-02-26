@@ -324,12 +324,12 @@ class MafMeesRekenenApp(App):
                 'op_mul': False,  # Allow multiplication?
                 'op_div': False,  # Allow division?
                 'int_only': True,  # Only allow sums that have an integer as result?
-                'num': 2,  # Number of questions
+                'num': 30,  # Number of questions
                 'time': 30,  # Max time per question allowed, in seconds
                 'ok_point': 1,  # Point for a correctly answered question
                 'fail_point': -1,  # Point for an incorrectly answered question
                 'doubler_at': 10,  # If a question is answered within this amount of seconds, points are doubled
-                'bronze': 2,  # Number of points required for next level
+                'bronze': 30,  # Number of points required for next level
                 'silver': 40,  # Number of points required for well done
                 'gold': 55,  # Number of points required for mastery
             },
@@ -355,6 +355,63 @@ class MafMeesRekenenApp(App):
             2: {
                 'left_min': 20,  # Minimum for left argument
                 'left_max': 30,  # Maximum for left argument
+                'right_min': 1,  # Minimum for right argument
+                'right_max': 9,  # Maximum for right argument
+                'op_add': True,  # Allow addition?
+                'op_sub': False,  # Allow substraction?
+                'op_mul': False,  # Allow multiplication?
+                'op_div': False,  # Allow division?
+                'int_only': True,  # Only allow sums that have an integer as result?
+                'num': 30,  # Number of questions
+                'time': 30,  # Max time per question allowed, in seconds
+                'ok_point': 1,  # Point for a correctly answered question
+                'fail_point': -1,  # Point for an incorrectly answered question
+                'doubler_at': 10,  # If a question is answered within this amount of seconds, points are doubled
+                'bronze': 30,  # Number of points required for next level
+                'silver': 40,  # Number of points required for well done
+                'gold': 55,  # Number of points required for mastery
+            },
+            3: {
+                'left_min': 30,  # Minimum for left argument
+                'left_max': 40,  # Maximum for left argument
+                'right_min': 1,  # Minimum for right argument
+                'right_max': 9,  # Maximum for right argument
+                'op_add': True,  # Allow addition?
+                'op_sub': False,  # Allow substraction?
+                'op_mul': False,  # Allow multiplication?
+                'op_div': False,  # Allow division?
+                'int_only': True,  # Only allow sums that have an integer as result?
+                'num': 30,  # Number of questions
+                'time': 30,  # Max time per question allowed, in seconds
+                'ok_point': 1,  # Point for a correctly answered question
+                'fail_point': -1,  # Point for an incorrectly answered question
+                'doubler_at': 10,  # If a question is answered within this amount of seconds, points are doubled
+                'bronze': 30,  # Number of points required for next level
+                'silver': 40,  # Number of points required for well done
+                'gold': 55,  # Number of points required for mastery
+            },
+            4: {
+                'left_min': 40,  # Minimum for left argument
+                'left_max': 50,  # Maximum for left argument
+                'right_min': 1,  # Minimum for right argument
+                'right_max': 9,  # Maximum for right argument
+                'op_add': True,  # Allow addition?
+                'op_sub': False,  # Allow substraction?
+                'op_mul': False,  # Allow multiplication?
+                'op_div': False,  # Allow division?
+                'int_only': True,  # Only allow sums that have an integer as result?
+                'num': 30,  # Number of questions
+                'time': 30,  # Max time per question allowed, in seconds
+                'ok_point': 1,  # Point for a correctly answered question
+                'fail_point': -1,  # Point for an incorrectly answered question
+                'doubler_at': 10,  # If a question is answered within this amount of seconds, points are doubled
+                'bronze': 30,  # Number of points required for next level
+                'silver': 40,  # Number of points required for well done
+                'gold': 55,  # Number of points required for mastery
+            },
+            5: {
+                'left_min': 1,  # Minimum for left argument
+                'left_max': 50,  # Maximum for left argument
                 'right_min': 1,  # Minimum for right argument
                 'right_max': 9,  # Maximum for right argument
                 'op_add': True,  # Allow addition?
