@@ -3,6 +3,7 @@
     MafMeesRekenenLevel:
     SuccessScreen:
     FailureScreen:
+    ReportScreen:
 
 <MafMeesMenu>:
     name: 'menu'
@@ -17,6 +18,8 @@
             text: 'Choose level'
         Button:
             text: 'Show level report'
+            disabled: root.report_disabled
+            on_release: app.root.current = 'reports'
         Button:
             text: 'Settings'
 
@@ -88,7 +91,7 @@
                 text: 'Ok'
                 on_release: root.press_ok()
 
-<SuccessScreen>
+<SuccessScreen>:
     name: 'success'
     BoxLayout:
         orientation: 'vertical'
@@ -102,7 +105,7 @@
             text: 'Back to menu'
             on_release: app.root.current = 'menu'
 
-<FailureScreen>
+<FailureScreen>:
     name: 'failure'
     BoxLayout:
         orientation: 'vertical'

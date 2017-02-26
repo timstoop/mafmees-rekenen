@@ -7,10 +7,14 @@ from appdirs import *
 from kivy.animation import Animation
 from kivy.app import App
 from kivy.clock import Clock
-from kivy.properties import NumericProperty, StringProperty, DictProperty
+from kivy.properties import NumericProperty, StringProperty, DictProperty, BooleanProperty
 from kivy.storage.jsonstore import JsonStore
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
 from kivy.uix.progressbar import ProgressBar
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.treeview import TreeView, TreeViewLabel
 
 
 class MafMeesRekenenLevel(Screen):
@@ -132,7 +136,9 @@ class MafMeesRekenenLevel(Screen):
             self.app.screenmanager.current = 'success'
             # Also make sure we can get to the next level!
             if self.progression['totals']['max_level'] < (self.level + 1):
-                self.progression['totals']['max_level'] = self.level + 1
+                totals = self.progression['totals']
+                totals['max_level'] = self.level + 1
+                self.progression['totals'] = totals
                 self.app.chosen_level = self.progression['totals']['max_level']
         else:
             self.app.screenmanager.current = 'failure'
@@ -199,8 +205,13 @@ class AnimProgressBar(ProgressBar):
 
 
 class MafMeesMenu(Screen):
-    pass
+    report_disabled = BooleanProperty(True)
 
+    def on_enter(self, *args):
+        if App.get_running_app().progression['totals']['max_level'] > 0:
+            self.report_disabled = False
+        else:
+            self.report_disabled = True
 
 class MafMeesScreenManager(ScreenManager):
     pass
@@ -213,6 +224,67 @@ class SuccessScreen(Screen):
 class FailureScreen(Screen):
     pass
 
+
+class ReportScreen(Screen):
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.app = App.get_running_app()
+        self.name = 'reports'
+        # Building here manually, as we need to dynamically build it up
+        b0 = BoxLayout(orientation='horizontal')
+        sv0 = ScrollView(do_scroll_y=False)
+        b0.add_widget(sv0)
+        b1 = BoxLayout(orientation='vertical', size_hint_y=None, size_hint_x=None)
+        sv0.add_widget(b1)
+        # Add a back button
+        btn = Button(id='back', text='Back to Menu', on_release=self.back_to_menu)
+        b1.add_widget(btn)
+        # Now add the levels as needed
+        max_levels = self.app.progression['totals']['max_level']
+        i = 0
+        while i < max_levels:
+            btn = Button(id='level_' + str(i), text='Level ' + str(i), on_release=self.show)
+            b1.add_widget(btn)
+            i += 1
+        # Next is the view for the actual report, we need to make this available to the root, as we want to fill it
+        # from a different method
+        self.sv1 = ScrollView(do_scroll_y=False)
+        b0.add_widget(self.sv1)
+        # And add the root element to this widget
+        self.add_widget(b0)
+        # And now fill the TreeView with data from the high level
+        self.show(None, override=(max_levels - 1))
+
+    def back_to_menu(self, *args):
+        self.parent.current = 'menu'
+
+    def show(self, instance, override=-1):
+        # Select a level
+        if override >= 0:
+            show = override
+        else:
+            show = int(instance.id.split('_')[1])
+        # Create the view
+        tv = TreeView(root_options=dict(text='Level ' + str(show) + ' plays'), pos=self.sv1.pos, size=self.sv1.size)
+        data = self.app.progression[str(show)]
+        node = {}
+        for score in data['scores']:
+            name = str(datetime.fromtimestamp(int(score['level_start'])).strftime('%Y-%m-%d %H:%M:%S'))
+            if score['passed']:
+                color = [0, 1, 0, 1]
+            else:
+                color = [1, 0, 0, 1]
+            node[score['level_start']] = tv.add_node(TreeViewLabel(text=name, color=color))
+            for q in data['questions'][str(score['level_start'])]:
+                question = "%s %s %s = %s (%ss)" % (q['o1'], q['op'], q['o2'], q['answer_given'], q['time_taken'])
+                if q['answer_correct']:
+                    color = [0, 1, 0, 1]
+                else:
+                    color = [1, 0, 0, 1]
+                tv.add_node(TreeViewLabel(text=question, color=color), node[score['level_start']])
+        # Finally, add the treeview to the scrollview
+        self.sv1.add_widget(tv)
+
 class MafMeesRekenenApp(App):
     chosen_level = NumericProperty(0)
 
@@ -223,6 +295,8 @@ class MafMeesRekenenApp(App):
         if len(self.progression) == 0:
             self.progression['totals'] = {'max_level': 0}
             self.chosen_level = 0
+        else:
+            self.chosen_level = self.progression['totals']['max_level']
 
     def build(self):
         self.screenmanager = MafMeesScreenManager()
@@ -240,12 +314,12 @@ class MafMeesRekenenApp(App):
                 'op_mul': False,  # Allow multiplication?
                 'op_div': False,  # Allow division?
                 'int_only': True,  # Only allow sums that have an integer as result?
-                'num': 2,  # Number of questions
+                'num': 30,  # Number of questions
                 'time': 30,  # Max time per question allowed, in seconds
                 'ok_point': 1,  # Point for a correctly answered question
                 'fail_point': -1,  # Point for an incorrectly answered question
                 'doubler_at': 10,  # If a question is answered within this amount of seconds, points are doubled
-                'bronze': 2,  # Number of points required for next level
+                'bronze': 30,  # Number of points required for next level
                 'silver': 40,  # Number of points required for well done
                 'gold': 55,  # Number of points required for mastery
             },
