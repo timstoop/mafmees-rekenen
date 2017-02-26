@@ -106,7 +106,8 @@ class MafMeesRekenenLevel(Screen):
             if len(self.answer) > 0 and int(self.answer) == self.known_answer:
                 self.answer_correct()
             else:
-                self.answer = '0'
+                if self.ids['progressbar'].value == 0:
+                    self.answer = '0'
                 self.answer_wrong()
             # Store the question
             self.store_question()
