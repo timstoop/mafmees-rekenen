@@ -1,6 +1,8 @@
 <MafMeesScreenManager>:
     MafMeesMenu:
     MafMeesRekenenLevel:
+    SuccessScreen:
+    FailureScreen:
 
 <MafMeesMenu>:
     name: 'menu'
@@ -9,8 +11,14 @@
         Label:
             text: 'MafMees Rekenen'
         Button:
-            text: 'Start'
+            text: 'Start level ' + str(app.progression['totals']['max_level'])
             on_release: app.root.current = 'level'
+        Button:
+            text: 'Choose level'
+        Button:
+            text: 'Show level report'
+        Button:
+            text: 'Settings'
 
 <MafMeesRekenenLevel>:
     name: 'level'
@@ -19,6 +27,11 @@
         BoxLayout:
             orientation: 'horizontal'
             Label:
+                id: level
+                text: 'Level ' + str(root.level)
+            Label:
+                id: qnum
+                text: str(root.question_number) + " / " + str(root.level_data['num'])
             Label:
                 id: score
                 text: 'Score: ' + str(root.score)
@@ -26,7 +39,7 @@
         Label:
             id: opgave
             font_size: 50
-            text: str(root.o1) + " + " + str(root.o2) + " = " + str(root.answer)
+            text: str(root.o1) + " " + str(root.op) + " " + str(root.o2) + " = " + str(root.answer)
         AnimProgressBar:
             id: progressbar
             max: 100
@@ -74,3 +87,25 @@
             Button:
                 text: 'Ok'
                 on_release: root.press_ok()
+
+<SuccessScreen>
+    name: 'success'
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Success!'
+            font_size: 150
+        Button:
+            text: 'Back to menu'
+            on_release: app.root.current = 'menu'
+
+<FailureScreen>
+    name: 'failure'
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Try again!'
+            font_size: 150
+        Button:
+            text: 'Back to menu'
+            on_release: app.root.current = 'menu'
