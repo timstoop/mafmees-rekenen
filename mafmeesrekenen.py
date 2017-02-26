@@ -253,7 +253,7 @@ class ReportScreen(Screen):
             self.b1.add_widget(btn)
             i += 1
 
-    def on_enter(self, *args):
+    def on_pre_enter(self, *args):
         self.app = App.get_running_app()
         # Create the menu
         self.create_menu()
