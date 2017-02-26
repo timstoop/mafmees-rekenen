@@ -1,5 +1,5 @@
 import operator
-from calendar import timegm
+import time
 from datetime import datetime
 from random import randint, choice
 
@@ -32,13 +32,12 @@ class MafMeesRekenenLevel(Screen):
         self.reset_event = None
         self.level = 0
         self.app = App.get_running_app()
-        self.progression = self.app.progression
 
     def on_enter(self, *args):
-        self.level = self.progression['totals']['max_level']
+        self.level = self.app.progression['totals']['max_level']
         self.level_data = self.app.level_data(self.level)
         self.question_number = 0
-        self.level_start = timegm(datetime.now().utctimetuple())
+        self.level_start = time.time()
         self.make_question()
 
     def calculate(self):
@@ -138,27 +137,28 @@ class MafMeesRekenenLevel(Screen):
         if self.score >= self.level_data['bronze']:
             self.app.screenmanager.current = 'success'
             # Also make sure we can get to the next level!
-            if self.progression['totals']['max_level'] < (self.level + 1):
-                totals = self.progression['totals']
+            if self.app.progression['totals']['max_level'] < (self.level + 1):
+                totals = self.app.progression['totals']
                 totals['max_level'] = self.level + 1
-                self.progression['totals'] = totals
-                self.app.chosen_level = self.progression['totals']['max_level']
+                self.app.progression['totals'] = totals
+                self.app.chosen_level = self.app.progression['totals']['max_level']
         else:
             self.app.screenmanager.current = 'failure'
 
     def store_question(self):
         # Copy the object here
-        if self.level not in self.progression:
-            progression = {}
+        if str(self.level) not in self.app.progression:
+            prgr = {}
+            self.app.progression[str(self.level)] = {}
         else:
-            progression = self.progression[self.level]
-        if 'questions' not in progression:
-            progression['questions'] = {}
-        if str(self.level_start) not in progression['questions']:
-            progression['questions'][str(self.level_start)] = []
+            prgr = self.app.progression[str(self.level)]
+        if 'questions' not in prgr:
+            prgr['questions'] = {}
+        if str(self.level_start) not in prgr['questions']:
+            prgr['questions'][str(self.level_start)] = []
         # Add the question and result
         d = {}
-        d['timestamp'] = timegm(datetime.now().utctimetuple())
+        d['timestamp'] = time.time()
         d['level_start'] = self.level_start
         d['o1'] = self.o1
         d['o2'] = self.o2
@@ -171,29 +171,30 @@ class MafMeesRekenenLevel(Screen):
         # The time taken is the percentage of the progressbar that's passed times the allowed max time
         time_taken = (round(((100 - self.ids['progressbar'].value) / 100) * self.level_data['time']), 0)[0]
         d['time_taken'] = time_taken
-        progression['questions'][str(self.level_start)].append(d)
+        prgr['questions'][str(self.level_start)].append(d)
         # This seems a bit complex, but is needed to make sure the data is actually stored
-        self.progression[self.level] = progression
+        self.app.progression[str(self.level)]['questions'] = prgr['questions']
 
     def store_level(self):
         # Same as store_question, really
-        if self.level not in self.progression:
-            progression = {}
+        if str(self.level) not in self.app.progression:
+            prgr = {}
+            self.app.progression[str(self.level)] = {}
         else:
-            progression = self.progression[self.level]
-        if 'scores' not in progression:
-            progression['scores'] = []
+            prgr = self.app.progression[str(self.level)]
+        if 'scores' not in prgr:
+            prgr['scores'] = []
         # Add the result of this level
         d = {}
-        d['timestamp'] = timegm(datetime.now().utctimetuple())
+        d['timestamp'] = time.time()
         d['level_start'] = self.level_start
         d['score'] = self.score
         if self.score >= self.level_data['bronze']:
             d['passed'] = True
         else:
             d['passed'] = False
-        progression['scores'].append(d)
-        self.progression[self.level] = progression
+        prgr['scores'].append(d)
+        self.app.progression[str(self.level)]['scores'] = prgr['scores']
 
 
 class AnimProgressBar(ProgressBar):
@@ -225,7 +226,6 @@ class FailureScreen(Screen):
 class ReportScreen(Screen):
     def __init__(self, **kw):
         super().__init__(**kw)
-        self.app = App.get_running_app()
         self.name = 'reports'
         # Building here manually, as we need to dynamically build it up
         b0 = BoxLayout(orientation='horizontal')
@@ -254,6 +254,7 @@ class ReportScreen(Screen):
             i += 1
 
     def on_enter(self, *args):
+        self.app = App.get_running_app()
         # Create the menu
         self.create_menu()
         # And now fill the TreeView with data from the high level
