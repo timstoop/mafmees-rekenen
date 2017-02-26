@@ -11,6 +11,8 @@ from kivy.properties import NumericProperty, StringProperty, DictProperty
 from kivy.storage.jsonstore import JsonStore
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.label import Label
 from kivy.uix.progressbar import ProgressBar
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.scrollview import ScrollView
@@ -106,8 +108,6 @@ class MafMeesRekenenLevel(Screen):
             if len(self.answer) > 0 and int(self.answer) == self.known_answer:
                 self.answer_correct()
             else:
-                if self.ids['progressbar'].value == 0:
-                    self.answer = '0'
                 self.answer_wrong()
             # Store the question
             self.store_question()
@@ -130,6 +130,8 @@ class MafMeesRekenenLevel(Screen):
             self.score += self.level_data['ok_point']
 
     def answer_wrong(self):
+        if len(self.answer) == 0:
+            self.answer = '0'
         self.ids['opgave'].color = [1, 0, 0, 1]
         if self.score > 0:
             self.score += self.level_data['fail_point']
@@ -224,6 +226,39 @@ class SuccessScreen(Screen):
 class FailureScreen(Screen):
     pass
 
+
+class LevelSelectorScreen(Screen):
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.name = 'selector'
+        self.app = App.get_running_app()
+        # Build here manually, as we need to dynamically build it up
+        b0 = BoxLayout(orientation='vertical')
+        # Add to self
+        self.add_widget(b0)
+        l0 = Label(text='Choose a Level', font_size=50, size_hint_y=None)
+        b0.add_widget(l0)
+        self.g0 = GridLayout(cols=4, padding=10)
+        b0.add_widget(self.g0)
+        self.draw()
+
+    def on_pre_enter(self, *args):
+        self.draw()
+
+    def switch(self, instance):
+        self.app.chosen_level = int(instance.id.split('_')[1])
+        self.parent.current = 'menu'
+
+    def draw(self):
+        # Remove all the widgets
+        self.g0.clear_widgets()
+        # And add them again, based on the latest numbers.
+        max_levels = self.app.progression['totals']['max_level']
+        i = 0
+        while i <= max_levels:
+            btn = Button(id='level_' + str(i), text='Level ' + str(i), on_release=self.switch)
+            self.g0.add_widget(btn)
+            i += 1
 
 class ReportScreen(Screen):
     def __init__(self, **kw):

@@ -4,6 +4,7 @@
     SuccessScreen:
     FailureScreen:
     ReportScreen:
+    LevelSelectorScreen:
 
 <MafMeesMenu>:
     name: 'menu'
@@ -16,6 +17,7 @@
             on_release: app.root.current = 'level'
         Button:
             text: 'Choose level'
+            on_release: app.root.current = 'selector'
         Button:
             text: 'Show level report'
             on_release: app.root.current = 'reports'
