@@ -229,12 +229,12 @@ class ReportScreen(Screen):
         self.name = 'reports'
         # Building here manually, as we need to dynamically build it up
         b0 = BoxLayout(orientation='horizontal')
-        sv0 = ScrollView(do_scroll_y=False)
+        sv0 = ScrollView(do_scroll_y=False, size_hint_x=None)
         b0.add_widget(sv0)
         self.b1 = BoxLayout(orientation='vertical', size_hint_y=None, size_hint_x=None)
         sv0.add_widget(self.b1)
         # Next is the view for the actual report
-        self.sv1 = ScrollView(do_scroll_y=False, pos=self.pos, size=self.size)
+        self.sv1 = ScrollView(do_scroll_y=False)
         b0.add_widget(self.sv1)
         # And add the root element to this widget
         self.add_widget(b0)
