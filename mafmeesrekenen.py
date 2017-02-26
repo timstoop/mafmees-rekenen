@@ -7,7 +7,7 @@ from appdirs import *
 from kivy.animation import Animation
 from kivy.app import App
 from kivy.clock import Clock
-from kivy.properties import NumericProperty, StringProperty, DictProperty, BooleanProperty
+from kivy.properties import NumericProperty, StringProperty, DictProperty
 from kivy.storage.jsonstore import JsonStore
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -103,16 +103,19 @@ class MafMeesRekenenLevel(Screen):
         if not self.answered:
             self.ids['progressbar'].stop_progress()
             self.answered = True
-            self.store_question()
             if len(self.answer) > 0 and int(self.answer) == self.known_answer:
                 self.answer_correct()
             else:
+                self.answer = '0'
                 self.answer_wrong()
+            # Store the question
+            self.store_question()
             # Go to the end screen if we're done with the questions
             if self.question_number == self.level_data['num']:
                 self.measure_success()
             else:
                 self.reset_event = Clock.schedule_once(self.make_question, 4)
+
         else:
             Clock.unschedule(self.reset_event)
             self.make_question()
@@ -205,13 +208,7 @@ class AnimProgressBar(ProgressBar):
 
 
 class MafMeesMenu(Screen):
-    report_disabled = BooleanProperty(True)
-
-    def on_enter(self, *args):
-        if App.get_running_app().progression['totals']['max_level'] > 0:
-            self.report_disabled = False
-        else:
-            self.report_disabled = True
+    pass
 
 class MafMeesScreenManager(ScreenManager):
     pass
@@ -234,26 +231,33 @@ class ReportScreen(Screen):
         b0 = BoxLayout(orientation='horizontal')
         sv0 = ScrollView(do_scroll_y=False)
         b0.add_widget(sv0)
-        b1 = BoxLayout(orientation='vertical', size_hint_y=None, size_hint_x=None)
-        sv0.add_widget(b1)
-        # Add a back button
-        btn = Button(id='back', text='Back to Menu', on_release=self.back_to_menu)
-        b1.add_widget(btn)
-        # Now add the levels as needed
-        max_levels = self.app.progression['totals']['max_level']
-        i = 0
-        while i < max_levels:
-            btn = Button(id='level_' + str(i), text='Level ' + str(i), on_release=self.show)
-            b1.add_widget(btn)
-            i += 1
-        # Next is the view for the actual report, we need to make this available to the root, as we want to fill it
-        # from a different method
+        self.b1 = BoxLayout(orientation='vertical', size_hint_y=None, size_hint_x=None)
+        sv0.add_widget(self.b1)
+        # Next is the view for the actual report
         self.sv1 = ScrollView(do_scroll_y=False)
         b0.add_widget(self.sv1)
         # And add the root element to this widget
         self.add_widget(b0)
+
+    def create_menu(self):
+        # Clear the parent of everything
+        self.b1.clear_widgets()
+        # Add a back button
+        btn = Button(id='back', text='Back to Menu', on_release=self.back_to_menu)
+        self.b1.add_widget(btn)
+        # Now add the levels as needed
+        max_levels = self.app.progression['totals']['max_level']
+        i = 0
+        while i <= max_levels:
+            btn = Button(id='level_' + str(i), text='Level ' + str(i), on_release=self.show)
+            self.b1.add_widget(btn)
+            i += 1
+
+    def on_enter(self, *args):
+        # Create the menu
+        self.create_menu()
         # And now fill the TreeView with data from the high level
-        self.show(None, override=(max_levels - 1))
+        self.show(None, override=(self.app.progression['totals']['max_level']))
 
     def back_to_menu(self, *args):
         self.parent.current = 'menu'
@@ -264,24 +268,29 @@ class ReportScreen(Screen):
             show = override
         else:
             show = int(instance.id.split('_')[1])
+        # Remove previous view
+        self.sv1.clear_widgets()
         # Create the view
         tv = TreeView(root_options=dict(text='Level ' + str(show) + ' plays'), pos=self.sv1.pos, size=self.sv1.size)
-        data = self.app.progression[str(show)]
-        node = {}
-        for score in data['scores']:
-            name = str(datetime.fromtimestamp(int(score['level_start'])).strftime('%Y-%m-%d %H:%M:%S'))
-            if score['passed']:
-                color = [0, 1, 0, 1]
-            else:
-                color = [1, 0, 0, 1]
-            node[score['level_start']] = tv.add_node(TreeViewLabel(text=name, color=color))
-            for q in data['questions'][str(score['level_start'])]:
-                question = "%s %s %s = %s (%ss)" % (q['o1'], q['op'], q['o2'], q['answer_given'], q['time_taken'])
-                if q['answer_correct']:
+        if str(show) in self.app.progression:
+            data = self.app.progression[str(show)]
+            node = {}
+            for score in data['scores']:
+                name = str(datetime.fromtimestamp(int(score['level_start'])).strftime('%Y-%m-%d %H:%M:%S'))
+                if score['passed']:
                     color = [0, 1, 0, 1]
                 else:
                     color = [1, 0, 0, 1]
-                tv.add_node(TreeViewLabel(text=question, color=color), node[score['level_start']])
+                node[score['level_start']] = tv.add_node(TreeViewLabel(text=name, color=color))
+                for q in data['questions'][str(score['level_start'])]:
+                    question = "%s %s %s = %s (%ss)" % (q['o1'], q['op'], q['o2'], q['answer_given'], q['time_taken'])
+                    if q['answer_correct']:
+                        color = [0, 1, 0, 1]
+                    else:
+                        color = [1, 0, 0, 1]
+                    tv.add_node(TreeViewLabel(text=question, color=color), node[score['level_start']])
+        else:
+            tv.add_node(TreeViewLabel(text='No plays yet.'))
         # Finally, add the treeview to the scrollview
         self.sv1.add_widget(tv)
 
@@ -314,12 +323,12 @@ class MafMeesRekenenApp(App):
                 'op_mul': False,  # Allow multiplication?
                 'op_div': False,  # Allow division?
                 'int_only': True,  # Only allow sums that have an integer as result?
-                'num': 30,  # Number of questions
+                'num': 2,  # Number of questions
                 'time': 30,  # Max time per question allowed, in seconds
                 'ok_point': 1,  # Point for a correctly answered question
                 'fail_point': -1,  # Point for an incorrectly answered question
                 'doubler_at': 10,  # If a question is answered within this amount of seconds, points are doubled
-                'bronze': 30,  # Number of points required for next level
+                'bronze': 2,  # Number of points required for next level
                 'silver': 40,  # Number of points required for well done
                 'gold': 55,  # Number of points required for mastery
             },
