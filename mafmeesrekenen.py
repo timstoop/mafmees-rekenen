@@ -158,7 +158,7 @@ class MafMeesRekenenLevel(Screen):
 
 
 class AnimProgressBar(ProgressBar):
-    def start_progress(self, parent, length=30):
+    def start_progress(self, parent, length):
         Animation.cancel_all(self)
         anim = Animation(value=0, duration=length)
         anim.bind(on_complete=parent.press_ok)
