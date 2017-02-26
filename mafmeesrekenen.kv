@@ -11,7 +11,7 @@
         Label:
             text: 'MafMees Rekenen'
         Button:
-            text: 'Start level ' + str(app.progression['totals']['max_level'])
+            text: 'Start level ' + str(root.level)
             on_release: app.root.current = 'level'
         Button:
             text: 'Choose level'

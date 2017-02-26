@@ -127,6 +127,9 @@ class MafMeesRekenenLevel(Screen):
     def measure_success(self):
         if self.score >= self.level_data['bronze']:
             self.app.screenmanager.current = 'success'
+            # Also make sure we can get to the next level!
+            if self.progression['totals']['max_level'] < (self.level + 1):
+                self.progression['totals']['max_level'] = self.level + 1
         else:
             self.app.screenmanager.current = 'failure'
 
@@ -169,7 +172,10 @@ class AnimProgressBar(ProgressBar):
 
 
 class MafMeesMenu(Screen):
-    pass
+    level = NumericProperty
+
+    def on_enter(self):
+        self.level = App.get_running_app().progression['totals']['max_level']
 
 
 class MafMeesScreenManager(ScreenManager):
@@ -207,7 +213,7 @@ class MafMeesRekenenApp(App):
                 'op_mul': False,  # Allow multiplication?
                 'op_div': False,  # Allow division?
                 'int_only': True,  # Only allow sums that have an integer as result?
-                'num': 30,  # Number of questions
+                'num': 20,  # Number of questions
                 'time': 30,  # Max time per question allowed, in seconds
                 'ok_point': 1,  # Point for a correctly answered question
                 'fail_point': -1,  # Point for an incorrectly answered question
