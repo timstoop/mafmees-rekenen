@@ -75,7 +75,8 @@ class MafMeesRekenenLevel(Screen):
         self.answer = ''
         # Calculate a known answer
         self.known_answer = self.calculate()
-        # TODO we probably want to add some checks to see if we get integers or not
+        # TODO we probably want to add some checks to see if we get integers or not, especially when performing random
+        #      divisions
         # Reset the progressbar and start it again
         self.ids['progressbar'].value = 100
         self.ids['progressbar'].start_progress(self, self.level_data['time'])
