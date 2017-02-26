@@ -234,7 +234,7 @@ class ReportScreen(Screen):
         self.b1 = BoxLayout(orientation='vertical', size_hint_y=None, size_hint_x=None)
         sv0.add_widget(self.b1)
         # Next is the view for the actual report
-        self.sv1 = ScrollView(do_scroll_y=False)
+        self.sv1 = ScrollView(do_scroll_y=False, pos=self.pos, size=self.size)
         b0.add_widget(self.sv1)
         # And add the root element to this widget
         self.add_widget(b0)
@@ -272,8 +272,8 @@ class ReportScreen(Screen):
         # Remove previous view
         self.sv1.clear_widgets()
         # Create the view
-        tv = TreeView(root_options=dict(text='Level ' + str(show) + ' plays'), pos=self.sv1.pos, size=self.sv1.size)
-        if str(show) in self.app.progression:
+        tv = TreeView(root_options=dict(text='Level ' + str(show) + ' plays'))
+        if str(show) in self.app.progression and 'scores' in self.app.progression[str(show)]:
             data = self.app.progression[str(show)]
             node = {}
             for score in data['scores']:
