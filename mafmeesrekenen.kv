@@ -11,7 +11,7 @@
         Label:
             text: 'MafMees Rekenen'
         Button:
-            text: 'Start level ' + str(root.level)
+            text: 'Start level ' + str(app.chosen_level)
             on_release: app.root.current = 'level'
         Button:
             text: 'Choose level'
@@ -28,7 +28,7 @@
             orientation: 'horizontal'
             Label:
                 id: level
-                text: 'Level ' + str(root.level)
+                text: 'Level ' + str(app.chosen_level)
             Label:
                 id: qnum
                 text: str(root.question_number) + " / " + str(root.level_data['num'])
@@ -93,8 +93,11 @@
     BoxLayout:
         orientation: 'vertical'
         Label:
-            text: 'Success!'
+            text: 'Well done!'
             font_size: 150
+        Label:
+            text: 'On to the next level'
+            font_size: 25
         Button:
             text: 'Back to menu'
             on_release: app.root.current = 'menu'

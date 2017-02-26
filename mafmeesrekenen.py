@@ -34,6 +34,7 @@ class MafMeesRekenenLevel(Screen):
         self.level = self.progression['totals']['max_level']
         self.level_data = self.app.level_data(self.level)
         self.question_number = 0
+        self.level_start = timegm(datetime.now().utctimetuple())
         self.make_question()
 
     def calculate(self):
@@ -126,11 +127,13 @@ class MafMeesRekenenLevel(Screen):
             self.score += self.level_data['fail_point']
 
     def measure_success(self):
+        self.store_level()
         if self.score >= self.level_data['bronze']:
             self.app.screenmanager.current = 'success'
             # Also make sure we can get to the next level!
             if self.progression['totals']['max_level'] < (self.level + 1):
                 self.progression['totals']['max_level'] = self.level + 1
+                self.app.chosen_level = self.progression['totals']['max_level']
         else:
             self.app.screenmanager.current = 'failure'
 
@@ -141,23 +144,46 @@ class MafMeesRekenenLevel(Screen):
         else:
             progression = self.progression[self.level]
         if 'questions' not in progression:
-            progression['questions'] = []
+            progression['questions'] = {}
+        if str(self.level_start) not in progression['questions']:
+            progression['questions'][str(self.level_start)] = []
         # Add the question and result
         d = {}
         d['timestamp'] = timegm(datetime.now().utctimetuple())
+        d['level_start'] = self.level_start
         d['o1'] = self.o1
         d['o2'] = self.o2
         d['op'] = self.op
         d['answer_given'] = self.answer
-        if self.answer == self.known_answer:
+        if int(self.answer) == self.known_answer:
             d['answer_correct'] = True
         else:
             d['answer_correct'] = False
         # The time taken is the percentage of the progressbar that's passed times the allowed max time
         time_taken = (round(((100 - self.ids['progressbar'].value) / 100) * self.level_data['time']), 0)[0]
         d['time_taken'] = time_taken
-        progression['questions'].append(d)
+        progression['questions'][str(self.level_start)].append(d)
         # This seems a bit complex, but is needed to make sure the data is actually stored
+        self.progression[self.level] = progression
+
+    def store_level(self):
+        # Same as store_question, really
+        if self.level not in self.progression:
+            progression = {}
+        else:
+            progression = self.progression[self.level]
+        if 'scores' not in progression:
+            progression['scores'] = []
+        # Add the result of this level
+        d = {}
+        d['timestamp'] = timegm(datetime.now().utctimetuple())
+        d['level_start'] = self.level_start
+        d['score'] = self.score
+        if self.score >= self.level_data['bronze']:
+            d['passed'] = True
+        else:
+            d['passed'] = False
+        progression['scores'].append(d)
         self.progression[self.level] = progression
 
 
@@ -173,10 +199,7 @@ class AnimProgressBar(ProgressBar):
 
 
 class MafMeesMenu(Screen):
-    level = NumericProperty
-
-    def on_enter(self):
-        self.level = App.get_running_app().progression['totals']['max_level']
+    pass
 
 
 class MafMeesScreenManager(ScreenManager):
@@ -191,12 +214,15 @@ class FailureScreen(Screen):
     pass
 
 class MafMeesRekenenApp(App):
+    chosen_level = NumericProperty(0)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.localdatafile = os.path.join(self.user_data_dir, 'progression.json')
         self.progression = JsonStore(self.localdatafile)
         if len(self.progression) == 0:
             self.progression['totals'] = {'max_level': 0}
+            self.chosen_level = 0
 
     def build(self):
         self.screenmanager = MafMeesScreenManager()
@@ -214,12 +240,12 @@ class MafMeesRekenenApp(App):
                 'op_mul': False,  # Allow multiplication?
                 'op_div': False,  # Allow division?
                 'int_only': True,  # Only allow sums that have an integer as result?
-                'num': 20,  # Number of questions
+                'num': 2,  # Number of questions
                 'time': 30,  # Max time per question allowed, in seconds
                 'ok_point': 1,  # Point for a correctly answered question
                 'fail_point': -1,  # Point for an incorrectly answered question
                 'doubler_at': 10,  # If a question is answered within this amount of seconds, points are doubled
-                'bronze': 30,  # Number of points required for next level
+                'bronze': 2,  # Number of points required for next level
                 'silver': 40,  # Number of points required for well done
                 'gold': 55,  # Number of points required for mastery
             },
