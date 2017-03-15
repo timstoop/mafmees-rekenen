@@ -266,7 +266,7 @@ class ReportScreen(Screen):
         self.name = 'reports'
         # Building here manually, as we need to dynamically build it up
         b0 = BoxLayout(orientation='horizontal')
-        sv0 = ScrollView(do_scroll_x=False)
+        sv0 = ScrollView(do_scroll_x=False, size_hint=(None, None))
         b0.add_widget(sv0)
         self.b1 = BoxLayout(orientation='vertical', size_hint_y=None, size_hint_x=None)
         sv0.add_widget(self.b1)
@@ -356,7 +356,7 @@ class MafMeesRekenenApp(App):
     def on_kbd(self, window, key, *args):
         # user presses back button
         if key == 27:
-            return True
+            return False
 
     def level_data(self, num):
         levels = {
